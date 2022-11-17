@@ -1,6 +1,6 @@
 const std = @import("std");
-
 const mem = std.mem;
+const Method = std.http.Method;
 
 const hzzp = @import("hzzp");
 const zuri = @import("uri");
@@ -10,32 +10,6 @@ const connection = @import("connection.zig");
 
 const Protocol = connection.Protocol;
 const Connection = connection.Connection;
-
-/// All RFC 7231 and RFC 5789 HTTP methods.
-pub const Method = enum {
-    GET,
-    HEAD,
-    POST,
-    PUT,
-    DELETE,
-    CONNECT,
-    OPTIONS,
-    TRACE,
-    PATCH,
-
-    pub fn name(self: Method) []const u8 {
-        return @tagName(self);
-    }
-
-    pub const HasPayload = enum { yes, no, maybe };
-    pub fn hasPayload(self: Method) HasPayload {
-        switch (self) {
-            .GET, .HEAD, .CONNECT, .OPTIONS, .TRACE => return .no,
-            .POST, .PUT, .PATCH => return .yes,
-            .DELETE => return .maybe,
-        }
-    }
-};
 
 const root = @import("root");
 const read_buffer_size = if (@hasDecl(root, "zfetch_read_buffer_size"))
@@ -251,10 +225,10 @@ pub const Request = struct {
     /// Content-Length are provided automatically, therefore headers is nullable. This only writes information to allow
     /// for greater compatibility for change in the future.
     pub fn commit(self: *Request, method: Method, headers: ?hzzp.Headers, payload: ?[]const u8) !void {
-        if (method.hasPayload() == .yes and payload == null) return error.MissingPayload;
-        if (method.hasPayload() == .no and payload != null) return error.MustOmitPayload;
+        if (method.requestHasBody() and payload == null) return error.MissingPayload;
+        if (!method.requestHasBody() and payload != null) return error.MustOmitPayload;
 
-        try self.client.writeStatusLineParts(method.name(), self.uri.path, self.uri.query, self.uri.fragment);
+        try self.client.writeStatusLineParts(@tagName(method), self.uri.path, self.uri.query, self.uri.fragment);
 
         if (headers == null or !headers.?.contains("Host")) {
             if (self.uri.host) |host| {
