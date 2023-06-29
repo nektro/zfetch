@@ -36,14 +36,6 @@ const BufferedWriter = std.io.BufferedWriter(write_buffer_size, Connection.Write
 const HttpClient = hzzp.base.client.BaseClient(BufferedReader.Reader, BufferedWriter.Writer);
 
 pub const Request = struct {
-    pub const Status = struct {
-        /// The response code
-        code: u16,
-
-        /// The reason for this response code, may be non-standard.
-        reason: []const u8,
-    };
-
     allocator: mem.Allocator,
 
     /// The connection that this request is using.
@@ -59,7 +51,7 @@ pub const Request = struct {
     client: HttpClient,
 
     /// The response status.
-    status: Status,
+    status: std.http.Status,
 
     /// The response headers.
     headers: hzzp.Headers,
@@ -137,10 +129,7 @@ pub const Request = struct {
         req.client = HttpClient.init(req.buffer, req.buffered_reader.reader(), req.buffered_writer.writer());
 
         req.headers = hzzp.Headers.init(allocator);
-        req.status = Status{
-            .code = 0,
-            .reason = "",
-        };
+        req.status = @intToEnum(std.http.Status, 0);
 
         return req;
     }
@@ -171,10 +160,7 @@ pub const Request = struct {
         req.client = HttpClient.init(req.buffer, req.buffered_reader.reader(), req.buffered_writer.writer());
 
         req.headers = hzzp.Headers.init(allocator);
-        req.status = Status{
-            .code = 0,
-            .reason = "",
-        };
+        req.status = @intToEnum(std.http.Status, 0);
 
         return req;
     }
@@ -192,10 +178,7 @@ pub const Request = struct {
         self.headers = hzzp.Headers.init(self.allocator);
 
         self.allocator.free(self.status.reason);
-        self.status = Status{
-            .code = 0,
-            .reason = "",
-        };
+        self.status = @intToEnum(std.http.Status, 0);
     }
 
     /// End this request. Closes the connection and frees all data.
@@ -290,8 +273,7 @@ pub const Request = struct {
         while (try self.client.next()) |event| {
             switch (event) {
                 .status => |stat| {
-                    self.status.code = stat.code;
-                    self.status.reason = try self.allocator.dupe(u8, stat.reason);
+                    self.status = @intToEnum(std.http.Status, stat.code);
                 },
                 .header => |header| {
                     try self.headers.append(header);
