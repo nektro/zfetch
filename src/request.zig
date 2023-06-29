@@ -3,7 +3,6 @@ const mem = std.mem;
 const Method = std.http.Method;
 
 const hzzp = @import("hzzp");
-const zuri = @import("uri");
 const tls = @import("iguanaTLS");
 
 const connection = @import("connection.zig");
@@ -42,7 +41,7 @@ pub const Request = struct {
     socket: Connection,
 
     /// The components of the url provided when initialized.
-    uri: zuri.UriComponents,
+    uri: std.Uri,
 
     buffer: []u8 = undefined,
     client: HttpClient,
@@ -60,21 +59,17 @@ pub const Request = struct {
     /// Start a new request to the specified url. This will open a connection to the server.
     /// `url` must remain alive until the request is sent (see commit).
     pub fn init(allocator: mem.Allocator, url: []const u8, trust: ?tls.x509.CertificateChain) !*Request {
-        const uri = try zuri.parse(url);
+        const uri = try std.Uri.parse(url);
 
         const protocol: Protocol = proto: {
-            if (uri.scheme) |scheme| {
-                if (mem.eql(u8, scheme, "http")) {
-                    break :proto .http;
-                } else if (mem.eql(u8, scheme, "https")) {
-                    break :proto .https;
-                } else if (mem.eql(u8, scheme, "unix")) {
-                    break :proto .unix;
-                } else {
-                    return error.InvalidScheme;
-                }
+            if (mem.eql(u8, uri.scheme, "http")) {
+                break :proto .http;
+            } else if (mem.eql(u8, uri.scheme, "https")) {
+                break :proto .https;
+            } else if (mem.eql(u8, uri.scheme, "unix")) {
+                break :proto .unix;
             } else {
-                return error.MissingScheme;
+                return error.InvalidScheme;
             }
         };
 
@@ -131,7 +126,7 @@ pub const Request = struct {
     }
 
     pub fn fromConnection(allocator: std.mem.Allocator, conn: Connection, url: []const u8) !*Request {
-        const uri = try zuri.parse(url);
+        const uri = try std.Uri.parse(url);
 
         var req = try allocator.create(Request);
         errdefer allocator.destroy(req);
@@ -162,7 +157,7 @@ pub const Request = struct {
 
     /// This function does NOT reform the underlying connection. The url MUST reside on the same host and port.
     pub fn reset(self: *Request, url: []const u8) !void {
-        const uri = try zuri.parse(url);
+        const uri = try std.Uri.parse(url);
 
         self.uri = uri;
 

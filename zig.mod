@@ -5,7 +5,4 @@ license: MIT
 description: A HTTP request library for Zig with HTTPS support
 dependencies:
   - src: git https://github.com/truemedian/hzzp
-
   - src: git https://github.com/nektro/iguanaTLS
-
-  - src: git https://github.com/MasterQ32/zig-uri
