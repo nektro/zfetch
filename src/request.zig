@@ -41,9 +41,6 @@ pub const Request = struct {
     /// The connection that this request is using.
     socket: Connection,
 
-    /// A duplicate of the url provided when initialized.
-    url: []const u8,
-
     /// The components of the url provided when initialized.
     uri: zuri.UriComponents,
 
@@ -115,7 +112,6 @@ pub const Request = struct {
         req.buffer = try allocator.alloc(u8, mem.page_size);
         errdefer allocator.free(req.buffer);
 
-        req.url = url;
         req.uri = uri;
 
         req.buffered_reader = try allocator.create(BufferedReader);
@@ -146,7 +142,6 @@ pub const Request = struct {
         req.buffer = try allocator.alloc(u8, mem.page_size);
         errdefer allocator.free(req.buffer);
 
-        req.url = url;
         req.uri = uri;
 
         req.buffered_reader = try allocator.create(BufferedReader);
@@ -169,7 +164,6 @@ pub const Request = struct {
     pub fn reset(self: *Request, url: []const u8) !void {
         const uri = try zuri.parse(url);
 
-        self.url = url;
         self.uri = uri;
 
         self.client.reset();
