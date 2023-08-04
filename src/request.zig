@@ -121,7 +121,7 @@ pub const Request = struct {
         req.client = HttpClient.init(req.buffer, req.buffered_reader.reader(), req.buffered_writer.writer());
 
         req.headers = hzzp.Headers.init(allocator);
-        req.status = @intToEnum(std.http.Status, 0);
+        req.status = @enumFromInt(0);
 
         return req;
     }
@@ -152,7 +152,7 @@ pub const Request = struct {
         req.client = HttpClient.init(req.buffer, req.buffered_reader.reader(), req.buffered_writer.writer());
 
         req.headers = hzzp.Headers.init(allocator);
-        req.status = @intToEnum(std.http.Status, 0);
+        req.status = @enumFromInt(0);
 
         return req;
     }
@@ -170,7 +170,7 @@ pub const Request = struct {
         self.headers = hzzp.Headers.init(self.allocator);
 
         self.allocator.free(self.status.reason);
-        self.status = @intToEnum(std.http.Status, 0);
+        self.status = @enumFromInt(0);
     }
 
     /// End this request. Closes the connection and frees all data.
@@ -181,7 +181,6 @@ pub const Request = struct {
         self.uri = undefined;
 
         self.allocator.free(self.buffer);
-        self.allocator.free(self.status.reason);
 
         self.allocator.destroy(self.buffered_reader);
         self.allocator.destroy(self.buffered_writer);
@@ -265,7 +264,7 @@ pub const Request = struct {
         while (try self.client.next()) |event| {
             switch (event) {
                 .status => |stat| {
-                    self.status = @intToEnum(std.http.Status, stat.code);
+                    self.status = @enumFromInt(stat.code);
                 },
                 .header => |header| {
                     try self.headers.append(header);
