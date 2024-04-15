@@ -59,8 +59,7 @@ pub const Request = struct {
     /// Start a new request to the specified url. This will open a connection to the server.
     /// `url` must remain alive until the request is sent (see commit).
     pub fn init(allocator: mem.Allocator, url: []const u8, trust: ?tls.x509.CertificateChain) !*Request {
-        var uri = try std.Uri.parse(url);
-        if (std.mem.endsWith(u8, uri.host orelse "", ".localhost")) uri.host = "localhost";
+        const uri = try std.Uri.parse(url);
 
         const protocol: Protocol = proto: {
             if (mem.eql(u8, uri.scheme, "http")) {
@@ -127,8 +126,7 @@ pub const Request = struct {
     }
 
     pub fn fromConnection(allocator: std.mem.Allocator, conn: Connection, url: []const u8) !*Request {
-        var uri = try std.Uri.parse(url);
-        if (std.mem.endsWith(u8, uri.host orelse "", ".localhost")) uri.host = "localhost";
+        const uri = try std.Uri.parse(url);
 
         var req = try allocator.create(Request);
         errdefer allocator.destroy(req);
@@ -159,8 +157,7 @@ pub const Request = struct {
 
     /// This function does NOT reform the underlying connection. The url MUST reside on the same host and port.
     pub fn reset(self: *Request, url: []const u8) !void {
-        var uri = try std.Uri.parse(url);
-        if (std.mem.endsWith(u8, uri.host orelse "", ".localhost")) uri.host = "localhost";
+        const uri = try std.Uri.parse(url);
 
         self.uri = uri;
 
