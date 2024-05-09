@@ -147,7 +147,7 @@ pub const Connection = struct {
     fn setupTlsContext(self: *Connection) !void {
         // Workaround for std.crypto.rand not working in evented mode and std.rand.DefaultCsprng miscompiling the vectorized permute
         var seed: [8]u8 = undefined;
-        try std.os.getrandom(&seed);
+        try std.posix.getrandom(&seed);
         self.prng = std.rand.Isaac64.init(std.mem.bytesAsValue(u64, &seed).*);
 
         if (self.options.trust_chain) |trust_chain| {
@@ -224,7 +224,7 @@ test "can http?" {
 
     try conn.writer().writeAll("GET / HTTP/1.1\r\nHost: en.wikipedia.org\r\nAccept: */*\r\n\r\n");
 
-    var buf = try conn.reader().readUntilDelimiterAlloc(std.testing.allocator, '\r', std.math.maxInt(usize));
+    const buf = try conn.reader().readUntilDelimiterAlloc(std.testing.allocator, '\r', std.math.maxInt(usize));
     defer std.testing.allocator.free(buf);
 
     try std.testing.expectEqualStrings("HTTP/1.1 301 Moved Permanently", buf);
@@ -237,7 +237,7 @@ test "can https?" {
 
     try conn.writer().writeAll("GET / HTTP/1.1\r\nHost: en.wikipedia.org\r\nAccept: */*\r\n\r\n");
 
-    var buf = try conn.reader().readUntilDelimiterAlloc(std.testing.allocator, '\r', std.math.maxInt(usize));
+    const buf = try conn.reader().readUntilDelimiterAlloc(std.testing.allocator, '\r', std.math.maxInt(usize));
     defer std.testing.allocator.free(buf);
 
     try std.testing.expectEqualStrings("HTTP/1.1 301 Moved Permanently", buf);

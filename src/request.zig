@@ -85,12 +85,12 @@ pub const Request = struct {
             .unix => {
                 if (uri.host != null) return error.InvalidUri;
 
-                options.hostname = uri.path;
+                options.hostname = try uri.path.toRawMaybeAlloc(std.testing.failing_allocator);
             },
             .http, .https => {
                 if (uri.host == null) return error.MissingHost;
 
-                options.hostname = uri.host.?;
+                options.hostname = try uri.host.?.toRawMaybeAlloc(std.testing.failing_allocator);
                 options.port = uri.port;
             },
         }
@@ -198,17 +198,22 @@ pub const Request = struct {
         if (method.requestHasBody() and payload == null) return error.MissingPayload;
         if (!method.requestHasBody() and payload != null) return error.MustOmitPayload;
 
-        try self.client.writeStatusLineParts(@tagName(method), self.uri.path, self.uri.query, self.uri.fragment);
+        try self.client.writeStatusLineParts(
+            @tagName(method),
+            self.uri.path,
+            self.uri.query,
+            self.uri.fragment,
+        );
 
         if (headers == null or !headers.?.contains("Host")) {
             if (self.uri.host) |host| {
                 if (self.uri.port) |port| {
-                    var auth = try std.fmt.allocPrint(self.allocator, "{s}:{d}", .{ host, port });
+                    const auth = try std.fmt.allocPrint(self.allocator, "{host}:{d}", .{ host, port });
                     defer self.allocator.free(auth);
 
                     try self.client.writeHeaderValue("Host", auth);
                 } else {
-                    try self.client.writeHeaderValue("Host", host);
+                    try self.client.writeHeaderValue("Host", try host.toRawMaybeAlloc(std.testing.failing_allocator));
                 }
             } else {
                 try self.client.writeHeaderValue("Host", "");
@@ -221,10 +226,10 @@ pub const Request = struct {
 
             if (headers != null and headers.?.contains("Authorization")) return error.AuthorizationMismatch;
 
-            var unencoded = try std.fmt.allocPrint(self.allocator, "{s}:{s}", .{ self.uri.user.?, self.uri.password.? });
+            const unencoded = try std.fmt.allocPrint(self.allocator, "{user}:{password}", .{ self.uri.user.?, self.uri.password.? });
             defer self.allocator.free(unencoded);
 
-            var auth = try self.allocator.alloc(u8, std.base64.standard.Encoder.calcSize(unencoded.len));
+            const auth = try self.allocator.alloc(u8, std.base64.standard.Encoder.calcSize(unencoded.len));
             defer self.allocator.free(auth);
 
             _ = std.base64.standard.Encoder.encode(auth, unencoded);
@@ -295,7 +300,7 @@ test "makes request" {
     try std.testing.expectEqualStrings("OK", req.status.phrase().?);
     try std.testing.expectEqualStrings("application/json", req.headers.get("content-type").?);
 
-    var body = try req.reader().readAllAlloc(std.testing.allocator, 4 * 1024);
+    const body = try req.reader().readAllAlloc(std.testing.allocator, 4 * 1024);
     defer std.testing.allocator.free(body);
 
     var tree = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, body, .{});
@@ -318,7 +323,7 @@ test "does basic auth" {
     try std.testing.expectEqualStrings("OK", req.status.phrase().?);
     try std.testing.expectEqualStrings("application/json", req.headers.get("content-type").?);
 
-    var body = try req.reader().readAllAlloc(std.testing.allocator, 4 * 1024);
+    const body = try req.reader().readAllAlloc(std.testing.allocator, 4 * 1024);
     defer std.testing.allocator.free(body);
 
     var tree = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, body, .{});
@@ -346,7 +351,7 @@ test "can reset and resend" {
     try std.testing.expectEqualStrings("OK", req.status.phrase().?);
     try std.testing.expectEqualStrings("application/json", req.headers.get("content-type").?);
 
-    var body = try req.reader().readAllAlloc(std.testing.allocator, 4 * 1024);
+    const body = try req.reader().readAllAlloc(std.testing.allocator, 4 * 1024);
     defer std.testing.allocator.free(body);
 
     var tree = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, body, .{});
@@ -362,7 +367,7 @@ test "can reset and resend" {
     try std.testing.expectEqualStrings("OK", req.status.phrase().?);
     try std.testing.expectEqualStrings("application/json", req.headers.get("content-type").?);
 
-    var body1 = try req.reader().readAllAlloc(std.testing.allocator, 4 * 1024);
+    const body1 = try req.reader().readAllAlloc(std.testing.allocator, 4 * 1024);
     defer std.testing.allocator.free(body1);
 
     var tree1 = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, body1, .{});

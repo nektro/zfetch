@@ -1,7 +1,7 @@
 const std = @import("std");
 const packages = @import("./deps.zig");
 
-pub fn build(b: *std.build.Builder) void {
+pub fn build(b: *std.Build) void {
     const mode = b.option(std.builtin.Mode, "mode", "") orelse .Debug;
     const target = b.standardTargetOptions(.{});
 
