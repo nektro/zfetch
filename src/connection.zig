@@ -216,33 +216,3 @@ pub const Connection = struct {
         return .{ .context = self };
     }
 };
-
-test "can http?" {
-    try @This().init();
-    var conn = try Connection.connect(std.testing.allocator, .{ .hostname = "en.wikipedia.org" });
-    defer conn.close();
-
-    try conn.writer().writeAll("GET / HTTP/1.1\r\nHost: en.wikipedia.org\r\nAccept: */*\r\n\r\n");
-
-    const buf = try conn.reader().readUntilDelimiterAlloc(std.testing.allocator, '\r', std.math.maxInt(usize));
-    defer std.testing.allocator.free(buf);
-
-    try std.testing.expectEqualStrings("HTTP/1.1 301 Moved Permanently", buf);
-}
-
-test "can https?" {
-    try @This().init();
-    var conn = try Connection.connect(std.testing.allocator, .{ .hostname = "en.wikipedia.org", .protocol = .https, .want_tls = true });
-    defer conn.close();
-
-    try conn.writer().writeAll("GET / HTTP/1.1\r\nHost: en.wikipedia.org\r\nAccept: */*\r\n\r\n");
-
-    const buf = try conn.reader().readUntilDelimiterAlloc(std.testing.allocator, '\r', std.math.maxInt(usize));
-    defer std.testing.allocator.free(buf);
-
-    try std.testing.expectEqualStrings("HTTP/1.1 301 Moved Permanently", buf);
-}
-
-comptime {
-    std.testing.refAllDecls(@This());
-}

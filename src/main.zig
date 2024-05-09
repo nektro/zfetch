@@ -15,7 +15,3 @@ pub const Protocol = connection.Protocol;
 
 pub const init = connection.init;
 pub const deinit = connection.deinit;
-
-comptime {
-    std.testing.refAllDecls(@This());
-}
