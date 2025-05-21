@@ -1,16 +1,15 @@
-## Notice
-
-This package is deprecated and archived for the foreseeable future due to the zig master being an ever changing target
-and my lack of time to address and fix things that have changed. Those looking for a similar experience should look
-at [haze/zelda](https://github.com/haze/zelda).
-
 # zfetch
 
-[![Linux Workflow Status](https://img.shields.io/github/workflow/status/truemedian/zfetch/Linux?label=Linux&style=for-the-badge)](https://github.com/truemedian/zfetch/actions/workflows/linux.yml)
-[![Windows Workflow Status](https://img.shields.io/github/workflow/status/truemedian/zfetch/Windows?label=Windows&style=for-the-badge)](https://github.com/truemedian/zfetch/actions/workflows/windows.yml)
-[![MacOS Workflow Status](https://img.shields.io/github/workflow/status/truemedian/zfetch/MacOS?label=MacOS&style=for-the-badge)](https://github.com/truemedian/zfetch/actions/workflows/macos.yml)
+![loc](https://sloc.xyz/github/nektro/zfetch)
+[![license](https://img.shields.io/github/license/nektro/zfetch.svg)](https://github.com/nektro/zfetch/blob/master/LICENSE)
+[![nektro @ github sponsors](https://img.shields.io/badge/sponsors-nektro-purple?logo=github)](https://github.com/sponsors/nektro)
+[![Zig](https://img.shields.io/badge/Zig-0.14-f7a41d)](https://ziglang.org/)
+[![Zigmod](https://img.shields.io/badge/Zigmod-latest-f7a41d)](https://github.com/nektro/zigmod)
 
 A HTTP request library for Zig with HTTPS support.
+
+> [!WARNING]
+> This package is deprecated and only being maintained to work with the latest version of Zig. Any new usage should switch to `std.http.Client`.
 
 ## Features
 
