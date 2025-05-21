@@ -104,7 +104,7 @@ pub const Request = struct {
         req.socket = try Connection.connect(allocator, options);
         errdefer req.socket.close();
 
-        req.buffer = try allocator.alloc(u8, mem.page_size);
+        req.buffer = try allocator.alloc(u8, std.heap.page_size_min);
         errdefer allocator.free(req.buffer);
 
         req.uri = uri;
@@ -134,7 +134,7 @@ pub const Request = struct {
         req.allocator = allocator;
         req.socket = conn;
 
-        req.buffer = try allocator.alloc(u8, mem.page_size);
+        req.buffer = try allocator.alloc(u8, std.heap.page_size_min);
         errdefer allocator.free(req.buffer);
 
         req.uri = uri;

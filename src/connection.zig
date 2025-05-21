@@ -66,7 +66,7 @@ pub const Connection = struct {
     secure_context: ?TlsClient = null,
 
     /// Workaround for std.crypto.rand not working in evented mode
-    prng: std.rand.Isaac64 = undefined,
+    prng: std.Random.Isaac64 = undefined,
 
     fn rawConnect(allocator: std.mem.Allocator, options: ConnectOptions) !Socket {
         switch (options.protocol) {
@@ -148,7 +148,7 @@ pub const Connection = struct {
         // Workaround for std.crypto.rand not working in evented mode and std.rand.DefaultCsprng miscompiling the vectorized permute
         var seed: [8]u8 = undefined;
         try std.posix.getrandom(&seed);
-        self.prng = std.rand.Isaac64.init(std.mem.bytesAsValue(u64, &seed).*);
+        self.prng = std.Random.Isaac64.init(std.mem.bytesAsValue(u64, &seed).*);
 
         if (self.options.trust_chain) |trust_chain| {
             self.secure_context = try tls.client_connect(.{
